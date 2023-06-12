@@ -158,13 +158,23 @@ const client = new MongoClient(uri, {
       app.put('/class/:id', verifyJWT, verifyAdmin, async (req, res) => {
         const id = req.params.id;
         const data = req.body;
+        const queryData = req.query.status;
         console.log(id,data);
         const options = { upsert: true };
         const filter = { _id: new ObjectId(id) };
-        const updateData = { 
-          $set : { 
-            feedback : data.feedback, 
-            status: "denied",
+        let updateData;
+        if(data.feedback){
+           updateData = { 
+            $set : { 
+              feedback : data.feedback, 
+              status: "denied",
+            }
+          }
+        }else if(queryData){
+           updateData = { 
+            $set : { 
+              status: "approved",
+            }
           }
         }
         const result = await classCollection.updateOne(filter, updateData, options);
