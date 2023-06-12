@@ -150,8 +150,15 @@ const client = new MongoClient(uri, {
 
       // get all class for admin and instructor
       app.get('/class', async (req, res) => {
-        const result = await classCollection.find().toArray();
-        res.send(result);
+        const queryData = req.query.status;
+        if(queryData || queryData.status === 'approved'){
+          const query = { status: 'approved' };
+          const result = await classCollection.find(query).toArray();
+          res.send(result);
+        }else{
+          const result = await classCollection.find().toArray();
+          res.send(result);
+        }
       })
 
       //feedback if denied only for admin 
