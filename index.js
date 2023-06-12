@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const app = express();
@@ -148,12 +148,29 @@ const client = new MongoClient(uri, {
         res.send(result);
       })
 
-      // get all class only for admin
-      app.get('/class', verifyJWT, verifyAdmin, async (req, res) => {
+      // get all class for admin and instructor
+      app.get('/class', async (req, res) => {
         const result = await classCollection.find().toArray();
         res.send(result);
       })
 
+      //feedback if denied only for admin 
+      app.put('/class/:id', verifyJWT, verifyAdmin, async (req, res) => {
+        const id = req.params.id;
+        const data = req.body;
+        console.log(id,data);
+        const options = { upsert: true };
+        const filter = { _id: new ObjectId(id) };
+        const updateData = { 
+          $set : { 
+            feedback : data.feedback, 
+            status: "denied",
+          }
+        }
+        const result = await classCollection.updateOne(filter, updateData, options);
+        res.send(result);
+
+      })
 
 
 
