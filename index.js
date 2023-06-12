@@ -24,6 +24,7 @@ const verifyJWT = (req,res,next) => {
       res.status(403).send({error:true,"message":"Forbidden Access"});
     }
     req.decoded = decoded;
+    console.log(decoded);
     next();
   })
 }
@@ -139,6 +140,13 @@ const client = new MongoClient(uri, {
         const result = await classCollection.insertOne(classData);
         res.send(result);
       });
+      //get specefied instructors class
+      app.get('/class/:email', verifyJWT, verifyInstructor, async (req, res) =>{
+        const email = req.params.email;
+        const query = {email: email};
+        const result = await classCollection.find(query).toArray();
+        res.send(result);
+      })
 
 
 
