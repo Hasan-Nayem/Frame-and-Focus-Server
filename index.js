@@ -148,6 +148,13 @@ const client = new MongoClient(uri, {
         res.send(result);
       })
 
+      // get all class only for admin
+      app.get('/class', verifyJWT, verifyAdmin, async (req, res) => {
+        const result = await classCollection.find().toArray();
+        res.send(result);
+      })
+
+
 
 
 
