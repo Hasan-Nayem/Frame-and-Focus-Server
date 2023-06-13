@@ -55,6 +55,8 @@ const client = new MongoClient(uri, {
 
       const userCollection = client.db("phero-assignment-12").collection("users");
       const classCollection = client.db("phero-assignment-12").collection("classes");
+      const bookedClassesCollection = client.db("phero-assignment-12").collection("bookedClasses");
+      
 
 
       app.post('/jwt',  (req, res) => {
@@ -188,6 +190,28 @@ const client = new MongoClient(uri, {
         res.send(result);
 
       })
+
+      //API for student to add class in their dashboard
+      app.post('/selectClass', verifyJWT, async (req, res) => {
+        const data = req.body;
+        console.log(data);
+        const updateSeat = parseInt(data.availableSeat) - 1;
+        const result = await bookedClassesCollection.insertOne(data);
+
+        const filter = { _id : new ObjectId(data.courseId) };
+        const options = { upsert: true };
+        const updateData = {
+          $set: { 
+            seat: updateSeat
+          }
+        }
+        const updateAvailableSeat = await classCollection.updateOne(filter, updateData, options);
+        
+        console.log({result, updateAvailableSeat})
+
+        res.send({result, updateAvailableSeat});
+
+      });
 
 
 
