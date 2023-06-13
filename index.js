@@ -153,12 +153,13 @@ const client = new MongoClient(uri, {
       // get all class for admin and instructor
       app.get('/class', async (req, res) => {
         const queryData = req.query.status;
-        if(queryData || queryData.status === 'approved'){
+        console.log(queryData);
+        if(queryData || queryData === 'approved'){
           const query = { status: 'approved' };
           const result = await classCollection.find(query).toArray();
           res.send(result);
         }else{
-          const result = await classCollection.find().toArray();
+          const result = await classCollection.find().sort({ totalStudent: -1 }).toArray();
           res.send(result);
         }
       })
@@ -203,6 +204,9 @@ const client = new MongoClient(uri, {
         const updateData = {
           $set: { 
             seat: updateSeat
+          },
+          $inc : {
+            totalStudent : 1
           }
         }
         const updateAvailableSeat = await classCollection.updateOne(filter, updateData, options);
@@ -212,8 +216,6 @@ const client = new MongoClient(uri, {
         res.send({result, updateAvailableSeat});
 
       });
-
-
 
 
     } finally {
