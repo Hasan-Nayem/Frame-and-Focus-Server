@@ -4,7 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 3000;
-
+const stripe = require("stripe")('sk_test_51NFfGbC8F0C8zF1203tGu1ntDE1wYA7u6MkNkj14BJq0MIthMaFY7J25y7uhkfmq9Y6dEWS23gDkKQdCfVVb8OZO00gBoA4Prv');
 const uri = `mongodb+srv://nayemmh66:uSVYH3knYa0ZFmHG@cluster0.n6ux36g.mongodb.net/?retryWrites=true&w=majority`;
 
 //middleware
@@ -251,6 +251,27 @@ const client = new MongoClient(uri, {
         const updateSeat = await classCollection.updateOne(filter, updateData, options);
 
         res.send({result, updateSeat});
+      });
+
+      //Payment api
+      app.get('/pay/:id', async (req, res) => {
+        const result = await bookedClassesCollection.findOne({ _id: new ObjectId(req.params.id) });
+        res.send(result);
+      });
+
+      app.post('/create-payment-intent', async (req, res) => {
+        const body = req.body;
+        console.log(body.price);
+        const amount = (body.price)*100;
+        console.log(amount);
+        const paymentIntent = await stripe.paymentIntents.create({ 
+          amount : amount,
+          currency : 'USD',
+          payment_method_types : ['card']
+        });
+        res.send({
+          clientSecret : paymentIntent.client_secret,
+        })
       });
 
 
