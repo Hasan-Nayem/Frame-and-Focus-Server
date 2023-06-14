@@ -131,11 +131,16 @@ const client = new MongoClient(uri, {
           }
         };
         const result = await userCollection.updateOne(filter, update, options);
-
+        res.send(result);
       });
 
 
       //Instructors Api
+      //Get All Instructor 
+      app.get('/instructors', async (req, res) => {
+        const result = await userCollection.find({ role : 2 }).toArray();
+        res.send(result);
+      })
       //Add a class
       app.post('/class', verifyJWT, verifyInstructor, async (req, res) =>{
         const classData = req.body;
@@ -143,7 +148,7 @@ const client = new MongoClient(uri, {
         res.send(result);
       });
       //get specefied instructors class
-      app.get('/class/:email', verifyJWT, verifyInstructor, async (req, res) =>{
+      app.get('/class/:email', async (req, res) =>{
         const email = req.params.email;
         const query = {email: email};
         const result = await classCollection.find(query).toArray();
@@ -215,6 +220,37 @@ const client = new MongoClient(uri, {
 
         res.send({result, updateAvailableSeat});
 
+      });
+
+      //API For students
+      app.get('/selected/:email', verifyJWT, async (req, res) => {
+        const email = req.params.email;
+        const query = { email : email };
+        const result = await bookedClassesCollection.find(query).toArray();
+        res.send(result);
+      });
+      // API For Delete Selected Class
+      app.delete('/selected/:email', verifyJWT, async (req, res) => {
+        const email = req.params.email;
+        const courseData = req.query.courseId;
+        console.log(courseData);
+        console.log(email);
+        const query = { email : email };
+        const result = await bookedClassesCollection.deleteOne(query);
+
+        const filter = { _id : new ObjectId(courseData) };
+        const options = { upsert: true };
+
+        const updateData = {
+          $inc : {
+            seat : 1,
+            totalStudent : - 1
+          }
+        }
+
+        const updateSeat = await classCollection.updateOne(filter, updateData, options);
+
+        res.send({result, updateSeat});
       });
 
 
