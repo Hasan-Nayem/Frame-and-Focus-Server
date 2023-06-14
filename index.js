@@ -56,6 +56,7 @@ const client = new MongoClient(uri, {
       const userCollection = client.db("phero-assignment-12").collection("users");
       const classCollection = client.db("phero-assignment-12").collection("classes");
       const bookedClassesCollection = client.db("phero-assignment-12").collection("bookedClasses");
+      const paymentCollection = client.db("phero-assignment-12").collection("payments");
       
 
 
@@ -259,11 +260,11 @@ const client = new MongoClient(uri, {
         res.send(result);
       });
 
-      app.post('/create-payment-intent', async (req, res) => {
+      app.post('/create-payment-intent', verifyJWT ,async (req, res) => {
         const body = req.body;
-        console.log(body.price);
+        // console.log(body.price);
         const amount = (body.price)*100;
-        console.log(amount);
+        console.log("Payment amount - ",amount);
         const paymentIntent = await stripe.paymentIntents.create({ 
           amount : amount,
           currency : 'USD',
@@ -273,6 +274,28 @@ const client = new MongoClient(uri, {
           clientSecret : paymentIntent.client_secret,
         })
       });
+
+      app.post('/save-payment', verifyJWT, async (req, res) => {
+        const data = req.body;
+        console.log(data);
+        const courseId = data.courseId;
+        //delete data from bookings table
+        const deleteBooking = bookedClassesCollection.deleteOne({courseId : courseId});
+        //update seat count for this class
+        const filter = { _id : new ObjectId(courseId) };
+        const updateData = { 
+          $inc : { 
+            seat : 1,
+            totalStudent : 1
+          }
+        }
+        const options = { upsert: false };
+        const updateClassInfo = await classCollection.updateOne(filter, updateData, options);
+        //save this payment history to database
+        const saveHistory = paymentCollection.insertOne(data); 
+        res.send({saveHistory, deleteBooking, updateClassInfo});
+
+      })
 
 
     } finally {
