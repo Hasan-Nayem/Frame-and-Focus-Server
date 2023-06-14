@@ -281,6 +281,7 @@ const client = new MongoClient(uri, {
         const courseId = data.courseId;
         //delete data from bookings table
         const deleteBooking = bookedClassesCollection.deleteOne({courseId : courseId});
+        console.log(deleteBooking);
         //update seat count for this class
         const filter = { _id : new ObjectId(courseId) };
         const updateData = { 
@@ -295,6 +296,12 @@ const client = new MongoClient(uri, {
         const saveHistory = paymentCollection.insertOne(data); 
         res.send({saveHistory, deleteBooking, updateClassInfo});
 
+      })
+      app.get('/history/:email', verifyJWT, async (req, res) => {
+        const email = req.params.email;
+        console.log("email in history - " + email);
+        const result = paymentCollection.find({email: email}).toArray();
+        res.send(result);
       })
 
 
